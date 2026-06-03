@@ -1,0 +1,56 @@
+# 環境變數與 API 金鑰（絕對不上傳）
+.env
+.env.local
+*.key
+
+# Python 虛擬環境
+.venv/
+venv/
+env/
+
+# Python 快取
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+
+# uv
+.python-version
+
+# 資料目錄（原始資料與標注資料不上傳）
+data/
+!data/.gitkeep
+
+# 模型檔案（體積過大）
+models/
+*.pt
+*.pth
+*.bin
+*.safetensors
+checkpoints/
+
+# Jupyter Notebook 輸出
+.ipynb_checkpoints/
+*.ipynb
+
+# 作業系統
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# 測試覆蓋率
+.coverage
+htmlcov/
+.pytest_cache/
+
+# 建置產物
+dist/
+build/
+*.egg-info/
