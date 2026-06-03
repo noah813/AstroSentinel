@@ -1,0 +1,27 @@
+{
+  "fusion_features": [
+    "lr_prob",
+    "xgb_prob",
+    "bert_user_prob",
+    "bert_max_prob",
+    "bert_comment_count"
+  ],
+  "test_size": 365,
+  "train_size": 1456,
+  "cv_f1_mean": 0.9669567239397479,
+  "cv_f1_std": 0.013517617717484597,
+  "precision": 0.8494623655913979,
+  "recall": 0.9875,
+  "f1": 0.9132947976878613,
+  "auc_roc": 0.9945175438596491,
+  "confusion_matrix": [
+    [
+      271,
+      14
+    ],
+    [
+      1,
+      79
+    ]
+  ]
+}

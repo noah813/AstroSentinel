@@ -1,0 +1,4 @@
+model,precision,recall,f1,auc_roc
+logistic_regression,0.8421,1.0000,0.9143,0.9904
+xgboost,0.8387,0.9750,0.9017,0.9902
+bert_aggregated,0.8718,0.8500,0.8608,0.9707

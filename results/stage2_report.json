@@ -1,0 +1,10 @@
+{
+  "model_name": "hfl/chinese-macbert-base",
+  "train_samples": 9804,
+  "val_samples": 1225,
+  "test_samples": 1226,
+  "best_epoch": 2,
+  "val_f1": 0.6182795698924731,
+  "val_precision": 0.625,
+  "val_recall": 0.6117021276595744
+}
