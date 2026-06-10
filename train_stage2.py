@@ -3,6 +3,14 @@ import json
 import numpy as np
 import pandas as pd
 import torch
+
+# Workaround for Hugging Face bug: disable auto_conversion check which causes 403 Forbidden error on repos with discussions disabled
+try:
+    import transformers.safetensors_conversion
+    transformers.safetensors_conversion.auto_conversion = lambda *args, **kwargs: None
+except Exception:
+    pass
+
 from torch.utils.data import Dataset, DataLoader
 from transformers import (
     AutoTokenizer,
@@ -71,7 +79,7 @@ def train_bert(train_df, val_df, model_name, output_dir, epochs=3):
     print(f"[train_bert] Using device: {device}")
 
     tokenizer = AutoTokenizer.from_pretrained(model_name)
-    model = AutoModelForSequenceClassification.from_pretrained(model_name, num_labels=1)
+    model = AutoModelForSequenceClassification.from_pretrained(model_name, num_labels=1, use_safetensors=False)
     model.to(device)
 
     # BCEWithLogitsLoss with pos_weight
