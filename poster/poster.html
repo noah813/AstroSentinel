@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <title>AstroSentinel 海報</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+    <style>
+        :root {
+            --bg-color: #f0f2f5;
+            --card-bg: #ffffff;
+            --primary-color: #1e3a8a; /* 深藍色，類似範本的標題列 */
+            --accent-color: #0d9488; /* 點綴色（類似 teal） */
+            --text-main: #333333;
+            --text-muted: #666666;
+            --border-color: #e5e7eb;
+        }
+
+        @page {
+            size: 1200px 2420px; /* Adjusted height to remove blank space */
+            margin: 0; 
+        }
+
+        body {
+            font-family: 'Noto Sans TC', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+        }
+
+        .poster-container {
+            width: 1200px;
+            background: var(--bg-color);
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+        }
+
+        @media print {
+            body {
+                display: block; /* Remove flex centering for print */
+            }
+            .poster-container {
+                box-shadow: none;
+                height: 2420px; /* Force container to fill the page */
+            }
+        }
+
+        /* Header 區域 */
+        .header {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 30px 50px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        .header-left, .header-right {
+            width: 140px;
+            flex-shrink: 0;
+            display: flex;
+            justify-content: center;
+        }
+
+        .header-logo {
+            width: 100%;
+            height: auto;
+            max-height: 120px;
+            object-fit: contain;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 8px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .header-content {
+            flex: 1;
+            text-align: center;
+            padding: 0 20px;
+        }
+
+        .header-content h1 {
+            margin: 0;
+            font-size: 42px;
+            font-weight: 900;
+            letter-spacing: 2px;
+        }
+
+        .header-content h2 {
+            margin: 15px 0 0 0;
+            font-size: 20px;
+            font-weight: 400;
+            color: #cbd5e1;
+            letter-spacing: 1px;
+        }
+
+        .header-content .info {
+            margin-top: 25px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 30px;
+            font-size: 16px;
+        }
+
+        .header .ack {
+            margin-top: 15px;
+            font-size: 14px;
+            color: #94a3b8;
+        }
+
+        /* 內容佈局 (2 Columns) */
+        .content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 25px;
+            padding: 25px;
+        }
+
+        /* 卡片設計 */
+        .card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            padding: 25px;
+            border: 1px solid var(--border-color);
+            margin-bottom: 25px;
+        }
+        
+        .col {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        /* 其他樣式略... */
+        .card-title {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--primary-color);
+            border-bottom: 3px solid var(--accent-color);
+            padding-bottom: 10px;
+            margin-top: 0;
+            margin-bottom: 20px;
+            display: inline-block;
+        }
+
+        .card p, .card ul {
+            font-size: 15px;
+            line-height: 1.6;
+            color: var(--text-main);
+        }
+
+        .card ul {
+            padding-left: 20px;
+        }
+
+        .card li {
+            margin-bottom: 8px;
+        }
+
+        .highlight {
+            font-weight: 700;
+            color: var(--primary-color);
+        }
+
+        /* 圖片容器 */
+        .img-container {
+            width: 100%;
+            text-align: center;
+            margin: 15px 0;
+        }
+
+        .img-container img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 8px;
+        }
+        
+        .img-caption {
+            font-size: 13px;
+            color: var(--text-muted);
+            margin-top: 8px;
+            font-style: italic;
+        }
+
+        /* 標籤/特徵設計 */
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .feature-box {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            padding: 10px;
+            text-align: center;
+        }
+
+        .feature-box .f-title {
+            font-weight: 700;
+            font-size: 14px;
+            color: var(--accent-color);
+            margin-bottom: 5px;
+        }
+
+        .feature-box .f-desc {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        /* 視覺化管線圖設計 */
+        .pipeline {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 20px 0;
+        }
+        .pl-box {
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-weight: bold;
+            text-align: center;
+            color: #333;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            border: 2px solid transparent;
+            width: 80%;
+            box-sizing: border-box;
+        }
+        .pl-data { background: #f8fafc; border-color: #cbd5e1; }
+        .pl-st1 { background: #e0f2fe; border-color: #0284c7; color: #0369a1; width: 48%; }
+        .pl-st2 { background: #dcfce3; border-color: #16a34a; color: #15803d; width: 48%; }
+        .pl-st3 { background: #fef08a; border-color: #ca8a04; color: #a16207; }
+        .pl-out { background: #fee2e2; border-color: #dc2626; color: #991b1b; }
+        .pl-split {
+            display: flex;
+            width: 85%;
+            justify-content: space-between;
+        }
+        .pl-arrow {
+            font-size: 20px;
+            color: #94a3b8;
+            margin: 5px 0;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+<div class="poster-container">
+    <div class="header">
+        <div class="header-left">
+            <img src="../assets/nkust_logo.png" alt="NKUST Logo" class="header-logo">
+        </div>
+        <div class="header-content">
+            <h1>AstroSentinel：基於多維特徵與多模態機器學習的水軍偵測系統</h1>
+            <h2>AstroSentinel: Multi-Feature and Multi-Modal Machine Learning for Astroturfing Detection</h2>
+            <div class="info">
+                <span><strong>作者：</strong>林越</span>
+                <span><strong>所屬單位：</strong>國立高雄科技大學</span>
+            </div>
+        </div>
+        <div class="header-right"></div> <!-- Spacer for perfect centering -->
+    </div>
+
+    <div class="content">
+        <!-- 左半部 -->
+        <div class="col">
+            <div class="card">
+                <h2 class="card-title">1. 問題與動機</h2>
+                <p>社群媒體平台上的「水軍」(Astroturfing) 行為透過機器人帳號、付費評論與協同操控，系統性地扭曲公共輿論。</p>
+                <ul>
+                    <li><span class="highlight">極度氾濫：</span>YouTube 繁體中文政論頻道留言區已成為水軍活動的重災區。</li>
+                    <li><span class="highlight">傳統審查失效：</span>現有內容審查機制難以有效辨識經過偽裝的高級水軍。</li>
+                    <li><span class="highlight">解決方案：</span>AstroSentinel 透過行為、內容、時間三個維度，結合傳統機器學習與深度學習，打造高準確率的自動化偵測屏障。</li>
+                </ul>
+            </div>
+
+            <div class="card">
+                <h2 class="card-title">2. 動態標注與特徵工程</h2>
+                <p>為了解決標記資料匱乏的問題，我們採用了 <strong>Agent Worker Pool (動態子代理池)</strong> 架構，驅動大語言模型 (LLM) 自動化完成 4.3 萬名用戶的標注，並萃取出 13 項關鍵維度特徵：</p>
+                
+                <div class="feature-grid">
+                    <div class="feature-box">
+                        <div class="f-title">行為維度 (Behavior)</div>
+                        <div class="f-desc">零讚留言比例<br>單一影片集中度<br>跨影片數量</div>
+                    </div>
+                    <div class="feature-box">
+                        <div class="f-title">內容維度 (Content)</div>
+                        <div class="f-desc">自我留言相似度 (TF-IDF)<br>垃圾連結比例<br>廣告關鍵字特徵</div>
+                    </div>
+                    <div class="feature-box">
+                        <div class="f-title">時間維度 (Temporal)</div>
+                        <div class="f-desc">深夜留言比例<br>留言時間間隔標準差<br>爆發性發文次數</div>
+                    </div>
+                </div>
+
+                <div class="img-container">
+                    <img src="../results/feature_importance.png" alt="特徵重要性分析">
+                    <div class="img-caption">圖一：XGBoost 模型對於各項水軍特徵的重要性排序分析</div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2 class="card-title">5. 實驗成果 (Evaluation)</h2>
+                <p>在 4.3 萬名使用者的測試集中，最終的 Fusion 模型達到了驚人的分類表現，徹底碾壓單一模型：</p>
+                <div class="img-container">
+                    <img src="../results/model_comparison.png" alt="模型成效比較">
+                    <div class="img-caption">圖三：各階段模型在 Precision, Recall, F1 與 ROC-AUC 的綜合表現對比</div>
+                </div>
+                <ul>
+                    <li><span class="highlight">ROC-AUC 高達 0.95</span>：展現了近乎完美的真假水軍分類能力。</li>
+                    <li><span class="highlight">召回率 (Recall) 達 90%</span>：極大化降低了漏網之魚的發生率。</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- 右半部 -->
+        <div class="col">
+            <div class="card">
+                <h2 class="card-title">3. 留言間隔分析 (Time Interval)</h2>
+                <p>追蹤每位用戶連續留言的時間間隔，發現水軍呈現出極度集中且短促的非人類頻率，這成為判斷其為自動化程式的核心依據。</p>
+                <div class="img-container">
+                    <img src="../results/feature_distribution_interval.png" alt="留言間隔時間分佈">
+                    <div class="img-caption">圖二：水軍 (Bot) 與一般使用者 (Normal) 的發文間隔分佈差異</div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2 class="card-title">4. 三階段訓練管線 (Training Pipeline)</h2>
+                <p>我們設計了階段式的訓練管線，將運算資源與特徵優勢最大化：</p>
+                
+                <div class="pipeline">
+                    <div class="pl-box pl-data">4.3萬筆用戶特徵與留言</div>
+                    <div class="pl-arrow">↓</div>
+                    <div class="pl-split">
+                        <div class="pl-box pl-st1">
+                            <strong>第一階段: XGBoost</strong><br>
+                            <span style="font-size:12px; font-weight:normal;">高維度行為數值特徵</span>
+                        </div>
+                        <div class="pl-box pl-st2">
+                            <strong>第二階段: MacBERT</strong><br>
+                            <span style="font-size:12px; font-weight:normal;">繁體中文語意與模板</span>
+                        </div>
+                    </div>
+                    <div class="pl-arrow">↘ ↙</div>
+                    <div class="pl-box pl-st3">
+                        <strong>第三階段: Stacking Fusion</strong><br>
+                        <span style="font-size:12px; font-weight:normal;">機率融合，消除盲區</span>
+                    </div>
+                    <div class="pl-arrow">↓</div>
+                    <div class="pl-box pl-out">最終水軍預測結果</div>
+                </div>
+                <ul>
+                    <li><strong>第一階段 (XGBoost)：</strong>專注於高維度的數值與行為特徵，具備極高的訓練效率。</li>
+                    <li><strong>第二階段 (MacBERT)：</strong>專注於繁體中文語意理解，捕捉格式化模板與異常言論。</li>
+                    <li><strong>第三階段 (Fusion)：</strong>透過 Stacking 技術融合兩者預測機率，消除單一模型的盲區。</li>
+                </ul>
+            </div>
+
+            <div class="card">
+                <h2 class="card-title">6. 結論與應用部署 (Deployment)</h2>
+                <p>本研究不僅在理論上填補了繁體中文 YouTube 水軍偵測的空白，更開發了實際的應用落地：</p>
+                <div class="img-container">
+                    <img src="../assets/plugin_screenshot.png" alt="外掛程式實測畫面" style="max-height: 180px; object-fit: contain;">
+                    <div class="img-caption">圖四：Chrome 擴充功能即時屏蔽水軍之實測畫面</div>
+                </div>
+                <ul>
+                    <li><strong>無痛部署：</strong>透過 FastAPI 建構超高速記憶體字典 API。</li>
+                    <li><strong>Chrome 擴充功能：</strong>開發者與一般民眾可直接安裝 AstroSentinel 插件，在 YouTube 留言區即時屏蔽已知網軍，實現「網頁端防護罩」。</li>
+                </ul>
+            </div>
+
+            <div class="card">
+                <h2 class="card-title">7. 致謝</h2>
+                <p style="margin: 0;">本專題由國立高雄科技大學教務處教學發展中心計畫支持，計畫名稱為：專題式學習。</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    mermaid.initialize({ startOnLoad: true, theme: 'base' });
+</script>
+</body>
+</html>

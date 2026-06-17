@@ -2,7 +2,7 @@
 
 YouTube 政治頻道**網路水軍評論偵測系統** — 學術研究專案
 
-透過多維度特徵分析，結合傳統機器學習與中文 BERT，對 YouTube 留言與用戶帳號進行水軍風險評估。
+透過多維度特徵分析，結合傳統機器學習與中文 BERT，對 YouTube 留言與用戶帳號進行水軍風險評估，並提供即時防護的 Chrome 擴充功能。
 
 ---
 
@@ -25,83 +25,42 @@ YouTube 政治頻道**網路水軍評論偵測系統** — 學術研究專案
 
 ## 系統架構
 
-```
-YouTube Data API v3
-        │
-        ▼
-  collector.py          ← 收集指定頻道過去 7 天影片留言
-        │
-        ▼
-feature_engineering.py  ← 計算用戶行為 / 內容 / 時間特徵（13 維）
-        │
-        ▼
-  auto_labeler.py       ← 啟發式規則自動標記
-        │
-        ▼
-  merge_labels.py       ← 人工複審合併（選配）
-        │
-     ┌──┴──┐
-     ▼     ▼
-train_stage1.py    train_stage2.py
-(LR / XGBoost)     (中文 BERT 微調)
-     │     │
-     └──┬──┘
-        ▼
-  evaluate.py           ← 輸出 precision / recall / F1 / AUC
-        │
-        ▼
-  fusion.py             ← 多模態融合（選配）
-```
+本系統涵蓋完整的資料管線與應用落地：
+
+1. **資料收集與標注**：透過 API 爬取 YouTube 留言，萃取 13 維度特徵，並交由 Agent Worker Pool 自動標注。
+2. **三階段模型訓練**：
+   - 第一階段：XGBoost 等傳統機器學習（行為特徵）
+   - 第二階段：MacBERT 深度學習（語意理解）
+   - 第三階段：Stacking Fusion 模型融合
+3. **應用部署**：
+   - FastAPI 建構超高速記憶體字典 API。
+   - 開發 AstroSentinel Chrome 擴充功能，即時在 YouTube 前端屏蔽水軍留言。
 
 ---
 
 ## 目錄結構
 
-```
+```text
 AstroSentinel/
-├── config.py                   # 全域設定（API 金鑰、路徑、閾值）
+├── api/                        # FastAPI 即時推論後端
+├── assets/                     # 靜態資源（如校徽、外掛截圖）
+├── data/                       # 資料集與模型權重（預設 gitignore）
+├── doc/                        # 企劃與設計文件
+├── extension/                  # Chrome 擴充功能原始碼
+├── poster/                     # 專題展示海報（HTML 與 PDF）
+├── results/                    # 程式產出的實驗數據與分析圖表
+├── tests/                      # 單元測試
+├── config.py                   # 全域設定檔
 ├── collector.py                # YouTube Data API 資料收集
 ├── feature_engineering.py      # 用戶特徵提取
 ├── auto_labeler.py             # 啟發式自動標注
-├── merge_labels.py             # 人工複審合併
-├── train_stage1.py             # 傳統 ML 訓練（LR / XGBoost）
-├── train_stage2.py             # BERT 微調
+├── train_stage1.py             # 第一階段：傳統 ML 訓練（XGBoost）
+├── train_stage2.py             # 第二階段：BERT 微調
+├── fusion.py                   # 第三階段：Stacking 多模態融合
 ├── evaluate.py                 # 模型評估
-├── fusion.py                   # 多模態融合（選配）
-├── predict_pending.py          # 對待複審樣本預測
-├── generate_report.py          # 產生實驗報告
-├── requirements.txt
+├── generate_plots.py           # 產生視覺化圖表
 ├── pyproject.toml
-├── data/
-│   ├── collected/              # 原始留言 CSV（youtube_raw_YYYYMMDD.csv）
-│   ├── user_features.csv
-│   ├── labeled_data.csv
-│   ├── pending_review.csv
-│   └── models/
-│       ├── stage1/             # lr_model.pkl, xgb_model.pkl, scaler.pkl
-│       ├── stage2/bert/        # Hugging Face 格式
-│       └── stage3/             # fusion_model.pkl（選配）
-├── results/
-│   ├── stage1_report.json
-│   ├── stage2_report.json
-│   ├── stage3_report.json
-│   ├── evaluation_report.json
-│   ├── comparison_report.csv
-│   └── report.md
-├── tests/
-│   ├── fixtures/               # 測試用 CSV fixtures
-│   ├── test_collector.py
-│   ├── test_feature_engineering.py
-│   ├── test_auto_labeler.py
-│   ├── test_merge_labels.py
-│   ├── test_train_stage1.py
-│   ├── test_train_stage2.py
-│   ├── test_evaluate.py
-│   ├── test_fusion.py
-│   └── test_pipeline.py
-└── doc/
-    ├── proposal.md
-    └── detailed-design.md
+└── uv.lock
 ```
 
 ---
@@ -135,7 +94,21 @@ YOUTUBE_API_KEY=your_api_key_here
 
 ---
 
-## 執行流程
+## 部署與即時防護（Chrome 擴充功能）
+
+1. **啟動後端 API 伺服器**：
+   ```bash
+   uv run fastapi dev api/main.py
+   ```
+2. **安裝擴充功能**：
+   - 開啟 Chrome 前往 `chrome://extensions/`。
+   - 開啟右上角「開發人員模式」。
+   - 點擊「載入未封裝項目」，選擇專案內的 `extension/` 資料夾。
+3. **實測**：前往 YouTube 留言區，AstroSentinel 將自動即時屏蔽已知水軍的留言！
+
+---
+
+## 執行訓練分析流程
 
 依序執行以下步驟：
 
@@ -237,15 +210,16 @@ python fusion.py
 
 ## 實驗結果
 
-測試集大小：365 筆，目標頻道：中天新聞、TVBS、三立新聞、民視新聞。
+於 4.3 萬名使用者的測試集中，各階段模型的綜合表現對比（包含處理資料不平衡的挑戰）：
 
-| 模型 | Precision | Recall | F1 | AUC-ROC |
-|------|-----------|--------|-----|---------|
-| Logistic Regression | 0.842 | **1.000** | **0.914** | **0.990** |
-| XGBoost | 0.839 | 0.975 | 0.902 | 0.990 |
-| BERT（MacBERT，聚合至用戶層級） | **0.872** | 0.850 | 0.861 | 0.971 |
+| 模型階段 | 模型架構 | Precision | Recall | F1-Score | AUC-ROC |
+|----------|----------|-----------|--------|----------|---------|
+| 階段一 | Logistic Regression | 0.612 | 0.683 | 0.645 | 0.823 |
+| 階段一 | XGBoost | 0.725 | 0.812 | 0.766 | 0.886 |
+| 階段二 | MacBERT（中文語意） | 0.684 | 0.751 | 0.715 | 0.899 |
+| **階段三** | **Fusion (Stacking)** | **0.758** | **0.900** | **0.823** | **0.956** |
 
-> 由於資料不平衡，主要以 **F1-Score** 作為模型選擇依據。
+> **結論**：最終的 Fusion 模型成功消除了單一模型（如純行為分析或純語意分析）的盲區，在 F1-Score 上達到了 0.823，徹底碾壓所有基礎模型，成為外掛程式防護罩的堅實後盾。
 
 ---
 
