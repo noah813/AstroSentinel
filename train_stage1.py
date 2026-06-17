@@ -18,6 +18,7 @@ def load_labeled_data(labeled_path: str, feature_cols: list) -> tuple:
     回傳 (X: pd.DataFrame, y: pd.Series)
     """
     df = pd.read_csv(labeled_path)
+    df = df.fillna(0)
     missing = set(feature_cols + ["is_bot"]) - set(df.columns)
     if missing:
         raise ValueError(f"缺少欄位: {missing}")

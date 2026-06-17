@@ -1,0 +1,24 @@
+{
+  "manifest_version": 3,
+  "name": "AstroSentinel",
+  "version": "1.0",
+  "description": "自動過濾與標記 YouTube 留言區的已知水軍 (Bot) 帳號。",
+  "permissions": ["storage"],
+  "host_permissions": [
+    "*://*.youtube.com/*",
+    "http://127.0.0.1:8000/*"
+  ],
+  "content_scripts": [
+    {
+      "matches": ["*://*.youtube.com/*"],
+      "js": ["content.js"],
+      "run_at": "document_end"
+    }
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_popup": "popup.html"
+  }
+}

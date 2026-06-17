@@ -25,6 +25,7 @@ def build_fusion_features(
 ) -> pd.DataFrame:
     """構建 5 維融合特徵 DataFrame，index 為 author_id。"""
     labeled_df = pd.read_csv(labeled_path)
+    labeled_df = labeled_df.fillna(0)
     X = labeled_df[feature_cols]
     author_ids = labeled_df["author_id"].values
 
