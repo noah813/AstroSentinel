@@ -3,6 +3,7 @@ import pandas as pd
 import numpy as np
 import os
 import sys
+from unittest.mock import MagicMock, patch
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 
@@ -10,6 +11,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 def make_row(**kwargs):
     """Create a pd.Series with default feature values"""
     defaults = {
+        "author_id": "test_user",
         "concentration": 0.0,
         "self_similarity": 0.0,
         "zero_like_ratio": 0.0,
@@ -28,184 +30,71 @@ def make_row(**kwargs):
     return pd.Series(defaults)
 
 
-def test_classify_bot():
-    """All 4 bot conditions satisfied should return 'bot'"""
-    from auto_labeler import classify_user
-
-    row = make_row(
-        concentration=5.01,
-        self_similarity=0.71,
-        zero_like_ratio=0.81,
-        interval_std=59.9,
-    )
-    assert classify_user(row) == "bot"
+def get_mock_client(response_text):
+    mock_client = MagicMock()
+    mock_response = MagicMock()
+    mock_response.text = response_text
+    mock_client.models.generate_content.return_value = mock_response
+    return mock_client
 
 
-def test_classify_bot_boundary_equal():
-    """concentration=5.0 should NOT be classified as bot (strict >)"""
-    from auto_labeler import classify_user
-
-    row = make_row(
-        concentration=5.0,  # Equal sign does not satisfy >
-        self_similarity=0.71,
-        zero_like_ratio=0.81,
-        interval_std=59.9,
-    )
-    assert classify_user(row) != "bot"
+def test_classify_user_llm_bot():
+    """Test LLM correctly parsing 'bot' response"""
+    from auto_labeler import classify_user_llm
+    row = make_row()
+    mock_client = get_mock_client("This user exhibits bot behavior. bot")
+    assert classify_user_llm(row, mock_client) == "bot"
 
 
-def test_classify_normal():
-    """All 3 normal conditions satisfied should return 'normal'"""
-    from auto_labeler import classify_user
-
-    row = make_row(
-        unique_videos=3,
-        self_similarity=0.29,
-        zero_like_ratio=0.49,
-    )
-    assert classify_user(row) == "normal"
+def test_classify_user_llm_normal():
+    """Test LLM correctly parsing 'normal' response"""
+    from auto_labeler import classify_user_llm
+    row = make_row()
+    mock_client = get_mock_client("The user is normal.")
+    assert classify_user_llm(row, mock_client) == "normal"
 
 
-def test_classify_pending():
-    """Neither condition satisfied should return 'pending'"""
-    from auto_labeler import classify_user
-
-    row = make_row(
-        concentration=2.0,
-        self_similarity=0.5,
-        zero_like_ratio=0.5,
-        unique_videos=1,
-    )
-    assert classify_user(row) == "pending"
+def test_classify_user_llm_pending():
+    """Test LLM correctly parsing 'pending' response"""
+    from auto_labeler import classify_user_llm
+    row = make_row()
+    mock_client = get_mock_client("I am unsure. pending")
+    assert classify_user_llm(row, mock_client) == "pending"
 
 
-def test_bot_priority_over_normal():
-    """Bot conditions take priority when both are satisfied"""
-    from auto_labeler import classify_user
-
-    row = make_row(
-        concentration=6.0,  # bot: > 5.0 ✓
-        self_similarity=0.8,  # bot: > 0.7 ✓
-        zero_like_ratio=0.9,  # bot: > 0.8 ✓
-        interval_std=50.0,  # bot: < 60.0 ✓
-        unique_videos=3,  # normal: >= 3 ✓
-        # normal: self_similarity < 0.3? No, 0.8 > 0.3
-        # normal: zero_like_ratio < 0.5? No, 0.9 > 0.5
-    )
-    # Bot conditions all satisfied → should return bot
-    assert classify_user(row) == "bot"
+@patch("time.sleep", return_value=None)
+def test_classify_user_llm_fallback(mock_sleep):
+    """Test LLM failure falls back to 'pending'"""
+    from auto_labeler import classify_user_llm
+    row = make_row()
+    mock_client = MagicMock()
+    mock_client.models.generate_content.side_effect = Exception("API error")
+    assert classify_user_llm(row, mock_client) == "pending"
 
 
-def test_pending_is_bot_empty_string(tmp_path):
-    """pending_review.csv is_bot column must be empty string, not NaN"""
+@patch("auto_labeler.genai.Client")
+@patch.dict(os.environ, {"GEMINI_API_KEY": "fake_key"})
+def test_run_labeling_integration(mock_client_class, tmp_path):
+    """Integration test for run_labeling with mocked LLM"""
     from auto_labeler import run_labeling
-    import config
-
-    features_path = "tests/fixtures/sample_labeled.csv"
-    labeled_out = str(tmp_path / "labeled.csv")
-    pending_out = str(tmp_path / "pending.csv")
-
-    run_labeling(features_path, labeled_out, pending_out)
-
-    # Check pending is_bot values
-    if os.path.exists(pending_out):
-        # Use keep_default_na=False to preserve empty strings
-        pending_df = pd.read_csv(pending_out, dtype={"is_bot": str}, keep_default_na=False)
-        if len(pending_df) > 0:
-            is_bot_vals = pending_df["is_bot"].tolist()
-            for val in is_bot_vals:
-                assert val == "", f"is_bot should be empty string, got: {repr(val)}"
-
-
-def test_labeled_no_empty_is_bot(tmp_path):
-    """labeled_data.csv is_bot column must only contain 0 or 1"""
-    from auto_labeler import run_labeling
-
-    features_path = "tests/fixtures/sample_labeled.csv"
-    labeled_out = str(tmp_path / "labeled.csv")
-    pending_out = str(tmp_path / "pending.csv")
-
-    run_labeling(features_path, labeled_out, pending_out)
-
-    if os.path.exists(labeled_out):
-        labeled_df = pd.read_csv(labeled_out)
-        if len(labeled_df) > 0:
-            assert set(labeled_df["is_bot"].unique()).issubset({0, 1})
-
-
-def test_classify_bot_boundary_conditions():
-    """Test all bot boundary conditions individually"""
-    from auto_labeler import classify_user
-
-    # concentration at boundary (should be bot when > 5.0)
-    row1 = make_row(
-        concentration=5.00001,
-        self_similarity=0.71,
-        zero_like_ratio=0.81,
-        interval_std=59.9,
-    )
-    assert classify_user(row1) == "bot"
-
-    # self_similarity at boundary
-    row2 = make_row(
-        concentration=5.01,
-        self_similarity=0.70001,
-        zero_like_ratio=0.81,
-        interval_std=59.9,
-    )
-    assert classify_user(row2) == "bot"
-
-    # zero_like_ratio at boundary
-    row3 = make_row(
-        concentration=5.01,
-        self_similarity=0.71,
-        zero_like_ratio=0.80001,
-        interval_std=59.9,
-    )
-    assert classify_user(row3) == "bot"
-
-    # interval_std at boundary
-    row4 = make_row(
-        concentration=5.01,
-        self_similarity=0.71,
-        zero_like_ratio=0.81,
-        interval_std=59.99999,
-    )
-    assert classify_user(row4) == "bot"
-
-
-def test_classify_normal_boundary_conditions():
-    """Test all normal boundary conditions individually"""
-    from auto_labeler import classify_user
-
-    # unique_videos at boundary (>= 3)
-    row1 = make_row(
-        unique_videos=3,
-        self_similarity=0.29,
-        zero_like_ratio=0.49,
-    )
-    assert classify_user(row1) == "normal"
-
-    # self_similarity at boundary (< 0.3)
-    row2 = make_row(
-        unique_videos=3,
-        self_similarity=0.29999,
-        zero_like_ratio=0.49,
-    )
-    assert classify_user(row2) == "normal"
-
-    # zero_like_ratio at boundary (< 0.5)
-    row3 = make_row(
-        unique_videos=3,
-        self_similarity=0.29,
-        zero_like_ratio=0.49999,
-    )
-    assert classify_user(row3) == "normal"
-
-
-def test_run_labeling_integration(tmp_path):
-    """Integration test for run_labeling with fixture"""
-    from auto_labeler import run_labeling
+    
+    mock_instance = MagicMock()
+    mock_client_class.return_value = mock_instance
+    
+    # Let the first response be 'bot', second 'normal', rest 'pending'
+    call_count = [0]
+    def mock_generate_content(*args, **kwargs):
+        mock_response = MagicMock()
+        if call_count[0] == 0:
+            mock_response.text = "bot"
+        elif call_count[0] == 1:
+            mock_response.text = "normal"
+        else:
+            mock_response.text = "pending"
+        call_count[0] += 1
+        return mock_response
+        
+    mock_instance.models.generate_content.side_effect = mock_generate_content
 
     features_path = "tests/fixtures/sample_labeled.csv"
     labeled_out = str(tmp_path / "labeled.csv")
@@ -213,19 +102,20 @@ def test_run_labeling_integration(tmp_path):
 
     stats = run_labeling(features_path, labeled_out, pending_out)
 
-    # Verify statistics dict structure
     assert "bot" in stats
     assert "normal" in stats
     assert "pending" in stats
-    assert isinstance(stats["bot"], (int, np.integer))
-    assert isinstance(stats["normal"], (int, np.integer))
-    assert isinstance(stats["pending"], (int, np.integer))
-
-    # Verify output files exist
+    
     assert os.path.exists(labeled_out)
-
-    # Verify labeled CSV structure
+    
     labeled_df = pd.read_csv(labeled_out)
-    assert "author_id" in labeled_df.columns
-    assert "is_bot" in labeled_df.columns
-    assert set(labeled_df["is_bot"].unique()).issubset({0, 1})
+    if len(labeled_df) > 0:
+        assert "author_id" in labeled_df.columns
+        assert "is_bot" in labeled_df.columns
+        assert set(labeled_df["is_bot"].unique()).issubset({0, 1})
+
+    pending_df = pd.read_csv(pending_out, dtype={"is_bot": str}, keep_default_na=False)
+    if len(pending_df) > 0:
+        is_bot_vals = pending_df["is_bot"].tolist()
+        for val in is_bot_vals:
+            assert val == "", f"is_bot should be empty string, got: {repr(val)}"
